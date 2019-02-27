@@ -1,28 +1,57 @@
-import React, { Component } from 'react';
-import logo from './logo.svg';
-import './App.css';
+import React from "react";
+import gql from "graphql-tag";
+import { Mutation } from "react-apollo";
+import { AppHeader } from "./AppHeader";
+import { TodosList } from "./TodosList";
 
-class App extends Component {
-  render() {
-    return (
-      <div className="App">
-        <header className="App-header">
-          <img src={logo} className="App-logo" alt="logo" />
-          <p>
-            Edit <code>src/App.js</code> and save to reload.
-          </p>
-          <a
-            className="App-link"
-            href="https://reactjs.org"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Learn React
-          </a>
-        </header>
-      </div>
-    );
+const CREATE_TODO = gql`
+  mutation CreateTodo($name: String!) {
+    createTodo(name: $name) @client
   }
+`;
+
+function CreateTodo({ onCompleted }) {
+  const [name, setName] = React.useState("");
+
+  return (
+    <Mutation mutation={CREATE_TODO} onCompleted={onCompleted}>
+      {submit => {
+        return (
+          <form
+            onSubmit={e => {
+              e.preventDefault();
+              submit({ variables: { name } });
+            }}
+          >
+            <input
+              type="text"
+              value={name}
+              onChange={e => setName(e.target.value)}
+            />
+          </form>
+        );
+      }}
+    </Mutation>
+  );
+}
+
+function App() {
+  const [addingTodo, setAddingTodo] = React.useState(false);
+
+  return (
+    <>
+      <AppHeader />
+      <main className="container">
+        <TodosList />
+        <button onClick={() => setAddingTodo(prev => !prev)}>
+          Create Todo
+        </button>
+        {addingTodo && (
+          <CreateTodo onCompleted={() => setAddingTodo(prev => !prev)} />
+        )}
+      </main>
+    </>
+  );
 }
 
 export default App;
